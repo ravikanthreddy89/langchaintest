@@ -1,0 +1,21 @@
+{
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "genre": "Fiction",
+    "year_published": 1925,
+    "publisher": {
+      "name": "Scribner",
+      "location": "New York"
+    },
+    "ratings": [
+      {
+        "source": "Goodreads",
+        "rating": 4.2
+      },
+      {
+        "source": "Amazon",
+        "rating": 4.4
+      }
+    ]
+  }
+  
