@@ -5,25 +5,13 @@ const { TextLoader } = require("langchain/document_loaders/fs/text");
 const { CSVLoader } = require("langchain/document_loaders/fs/csv");
 const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
 const { JSONLoader, JSONLinesLoader } = require("langchain/document_loaders/fs/json");
+const { PDFLoader } = require("langchain/document_loaders/fs/pdf");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
 const { HNSWLib } = require("langchain/vectorstores/hnswlib");
 const { RetrievalQAChain }= require("langchain/chains");
 
 // other util imports
 const {isEmpty} = require('lodash');
-
-async function readCsvFile() {
-    try {
-        const loader = new CSVLoader("sample_docs/example.csv");
-        const docs = await loader.load();
-        //console.log("Successfully loaded csv documents");
-        //console.log(docs) 
-    } catch (error) {
-        console.error("failed to load csv documents");
-    }
-}
-readCsvFile();
-
 
 /**
  * 
@@ -35,7 +23,8 @@ async function loadDocsFromDirectory({ path = "sample_docs/" }) {
             ".json": (path) => new JSONLoader(path),
             ".txt": (path) => new TextLoader(path),
             ".csv": (path) => new CSVLoader(path),
-            ".mdx": (path) => new TextLoader(path)
+            ".mdx": (path) => new TextLoader(path),
+            ".pdf": (path) => new PDFLoader(path)
         });
         const docs = await loader.load();
         //console.log({ docs });
@@ -57,18 +46,24 @@ async function splitAndChunK({docs = []}) {
     return docOutput
 }
 
+// util function to invoke chain and log the result
+async function queryWithChain({ chain , query}) {
+    const res = await chain.call({
+        query
+    });
+    console.log({res})
+}
 
 
-
-async function main() {
+async function main({path = "sample_docs"}) {
     // ingest/load the documents
-    const docs = await loadDocsFromDirectory({ path: "langchain_web_docs" });
+    const docs = await loadDocsFromDirectory({ path });
     const docOutput = await splitAndChunK({docs});
     //console.log(docOutput);
     
     // Create a vector store from the documents using OpenAI embeddings
     const vectorStore = await HNSWLib.fromDocuments(docOutput, new OpenAIEmbeddings({
-        openAIApiKey : 'dummykey'
+        openAIApiKey : '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'
     }));
 
     // Initialize a retriever wrapper around the vector store
@@ -76,16 +71,34 @@ async function main() {
     
 
     const model = new OpenAI({
-        openAIApiKey : 'dummykey'
+        openAIApiKey : 'dummyKey'
     });
-    const chain = RetrievalQAChain.fromLLM(model, vectorStoreRetriever);    
-    const res = await chain.call({
-        query: "list of langchain transformers",
+    const chain = RetrievalQAChain.fromLLM(model, vectorStoreRetriever);
+    queryWithChain({
+        chain,
+        query: "list of langchain transformers" 
     });
-    console.log({ res });
+    
+    queryWithChain({
+        chain,
+        query: "explain TransChain transformer",
+    });
+    
+    queryWithChain({
+        chain,
+        query: "how to ingest pdf docs",
+    });
+
+    queryWithChain({
+        chain,
+        query: "can I use langchain with a local llm model ?",
+    });
+    
 }
 
-main();
+
+
+main({path: "langchain_pdf_docs"});
 
 // const llm = new OpenAI({
 //     temperature: 0.9
